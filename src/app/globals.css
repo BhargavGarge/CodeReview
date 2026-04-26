@@ -1,0 +1,247 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --gradient-color: #8350e8;
+    --sparkles-color: #8350e8;
+  }
+
+  .dark {
+    --gradient-color: #8350e8;
+    --sparkles-color: #ffffff;
+  }
+}
+
+@theme {
+  --font-manrope: var(--font-manrope);
+  --font-cabin: var(--font-cabin);
+  --font-instrument-serif: var(--font-instrument-serif);
+  --font-inter: var(--font-inter);
+}
+
+@layer base {
+  * {
+    @apply m-0 p-0 box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply bg-[#010101] text-white;
+    background: linear-gradient(135deg, #010101 0%, #0b0f19 100%);
+    font-family: var(--font-inter), sans-serif;
+  }
+
+  h1 {
+    @apply tracking-tight;
+  }
+
+  h2 {
+    @apply tracking-tight;
+  }
+
+  h3 {
+    @apply font-semibold;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-8 py-3 rounded-full bg-white text-black font-semibold hover:bg-gray-100 transition-all duration-300 transform hover:scale-105;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-2 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 transition-all duration-300;
+  }
+
+  .glass {
+    @apply bg-white/5 backdrop-blur-md border border-white/10;
+  }
+
+  .glass-dark {
+    @apply bg-black/20 backdrop-blur-sm border border-white/5;
+  }
+
+  .glow-effect {
+    @apply shadow-[0_0_30px_rgba(197,103,232,0.4)];
+  }
+
+  .section-padding {
+    @apply px-4 md:px-8 lg:px-16 py-16 md:py-24 lg:py-32;
+  }
+
+  .font-manrope {
+    font-family: var(--font-manrope), sans-serif;
+  }
+
+  .font-cabin {
+    font-family: var(--font-cabin), sans-serif;
+  }
+
+  .font-instrument-serif {
+    font-family: var(--font-instrument-serif), serif;
+  }
+
+  .font-inter {
+    font-family: var(--font-inter), sans-serif;
+  }
+
+  .container-custom {
+    @apply max-w-7xl mx-auto;
+  }
+
+  .blur-glow {
+    @apply absolute rounded-full blur-[80px] opacity-30 pointer-events-none;
+  }
+}
+
+/* Smooth animations */
+@supports (animation-timeline: view()) {
+  .scroll-reveal {
+    animation: scroll-in linear forwards;
+    animation-timeline: view();
+    animation-range: entry 0% cover 40%;
+  }
+
+  @keyframes scroll-in {
+    from {
+      opacity: 0;
+      transform: translateY(2rem);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Fallback for browsers without view() support */
+.scroll-reveal {
+  opacity: 0;
+  transform: translateY(2rem);
+  transition:
+    opacity 0.6s ease-out,
+    transform 0.6s ease-out;
+}
+
+.scroll-reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Sign-in component animations */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0px);
+  }
+}
+
+@keyframes slideRightIn {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateX(0px);
+  }
+}
+
+@keyframes testimonialIn {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0px);
+    transform: translateY(0px) scale(1);
+  }
+}
+
+@layer components {
+  .animate-element {
+    animation: fadeSlideIn 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-slide-right {
+    animation: slideRightIn 0.8s ease-out forwards;
+    opacity: 0;
+  }
+
+  .animate-testimonial {
+    animation: testimonialIn 0.6s ease-out forwards;
+    opacity: 0;
+  }
+
+  /* Delay utilities */
+  .animate-delay-100 {
+    animation-delay: 0.1s;
+  }
+  .animate-delay-200 {
+    animation-delay: 0.2s;
+  }
+  .animate-delay-300 {
+    animation-delay: 0.3s;
+  }
+  .animate-delay-400 {
+    animation-delay: 0.4s;
+  }
+  .animate-delay-500 {
+    animation-delay: 0.5s;
+  }
+  .animate-delay-600 {
+    animation-delay: 0.6s;
+  }
+  .animate-delay-700 {
+    animation-delay: 0.7s;
+  }
+  .animate-delay-800 {
+    animation-delay: 0.8s;
+  }
+  .animate-delay-900 {
+    animation-delay: 0.9s;
+  }
+  .animate-delay-1000 {
+    animation-delay: 1s;
+  }
+  .animate-delay-1200 {
+    animation-delay: 1.2s;
+  }
+  .animate-delay-1400 {
+    animation-delay: 1.4s;
+  }
+
+  /* Checkbox styling */
+  .custom-checkbox {
+    @apply w-4 h-4 rounded accent-violet-400 cursor-pointer;
+  }
+}
+
+/* Remote cursor styles */
+.remote-cursor {
+  background-color: rgba(129, 140, 248, 0.3);
+  border-left: 2px solid rgba(129, 140, 248, 0.8);
+}
+
+.remote-cursor-glyph {
+  background-color: rgba(129, 140, 248, 0.8);
+  width: 4px !important;
+}

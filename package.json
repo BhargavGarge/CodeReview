@@ -1,0 +1,52 @@
+{
+  "name": "codereview-live",
+  "version": "1.0.0",
+  "description": "Real-time collaborative code review platform with AI-powered feedback",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@monaco-editor/react": "^4.7.0",
+    "@socket.io/redis-adapter": "^8.3.0",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.103.0",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.9.1",
+    "bullmq": "^5.75.2",
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
+    "groq-sdk": "^1.1.2",
+    "gsap": "^3.14.2",
+    "hls.js": "^1.4.0",
+    "ioredis": "^5.10.1",
+    "lucide-react": "^0.344.0",
+    "motion": "^11.1.0",
+    "next": "^15.1.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-use-measure": "^2.1.1",
+    "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
+    "tailwind-merge": "^2.5.4",
+    "three": "^0.183.2",
+    "y-monaco": "^0.1.6",
+    "yjs": "^13.6.30"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^9",
+    "eslint-config-next": "^15.1.0",
+    "postcss": "^8",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

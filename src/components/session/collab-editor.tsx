@@ -181,7 +181,7 @@ export function CollabEditor({
   ownerId,
   currentUserId,
   githubRepoUrl,
-  collaboratorNames,
+ 
   inviteLink,
 }: CollabEditorProps) {
   const [sessionFiles, setSessionFiles] = useState(initialFiles);

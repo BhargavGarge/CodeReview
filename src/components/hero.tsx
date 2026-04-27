@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { motion } from "motion/react";
 import { ArrowRight, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";

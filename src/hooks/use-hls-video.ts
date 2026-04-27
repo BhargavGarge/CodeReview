@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 export function useHLSVideo(
-  videoRef: React.RefObject<HTMLVideoElement>,
+  videoRef: React.RefObject<HTMLVideoElement | null>,
   hlsUrl: string,
   fallbackUrl: string,
 ) {

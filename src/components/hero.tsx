@@ -8,7 +8,7 @@ import { useHLSVideo } from "@/hooks/use-hls-video";
 
 export function Hero() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
+
 
   useHLSVideo(
     videoRef,
@@ -16,9 +16,7 @@ export function Hero() {
     "/_videos/v1/f0c78f536d5f21a047fb7792723a36f9d647daa1",
   );
 
-  useEffect(() => {
-    setIsLoaded(true);
-  }, []);
+ 
 
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden pt-20 md:pt-32">

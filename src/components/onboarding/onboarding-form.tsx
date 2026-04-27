@@ -45,19 +45,19 @@ export function OnboardingForm({ userId: _userId }: { userId: string }) {
 
   // Destination after onboarding completes.
   // Preserve ?next= so invite links redirect correctly after onboarding.
-  function getNextTarget() {
-    const next = searchParams.get("next");
-    return next && next.startsWith("/") ? next : "/dashboard";
-  }
+function getNextTarget() {
+  const next = searchParams?.get("next");
+  return next && next.startsWith("/") ? next : "/dashboard";
+}
 
-  function getSubmitLabel() {
-    const next = searchParams.get("next");
+function getSubmitLabel() {
+  const next = searchParams?.get("next");
 
-    if (next?.startsWith("/invite/")) return "Join Session";
-    if (next?.startsWith("/session/")) return "Go to Session";
+  if (next?.startsWith("/invite/")) return "Join Session";
+  if (next?.startsWith("/session/")) return "Go to Session";
 
-    return "Go to Dashboard";
-  }
+  return "Go to Dashboard";
+}
 
   function advance() {
     setStep((s) => (s < 3 ? ((s + 1) as 1 | 2 | 3) : s));

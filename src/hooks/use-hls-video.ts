@@ -41,7 +41,7 @@ export function useHLSVideo(
               });
             });
 
-            hls.on("hlsError", (event: any, data: any) => {
+            hls.on("hlsError", (_event: any, data: any) => {
               if (data.fatal) {
                 console.warn("HLS fatal error, fallback to MP4");
                 // Fallback to MP4

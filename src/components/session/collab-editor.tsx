@@ -80,7 +80,9 @@ function createYjsMonacoBinding(
     const doc = ytext.doc;
     if (!doc) return;
     doc.transact(() => {
-      for (const ch of [...e.changes].sort((a, b) => b.rangeOffset - a.rangeOffset)) {
+      for (const ch of [...e.changes].sort(
+        (a, b) => b.rangeOffset - a.rangeOffset,
+      )) {
         if (ch.rangeLength > 0) ytext.delete(ch.rangeOffset, ch.rangeLength);
         if (ch.text) ytext.insert(ch.rangeOffset, ch.text);
       }
@@ -181,14 +183,14 @@ export function CollabEditor({
   ownerId,
   currentUserId,
   githubRepoUrl,
- 
+
   inviteLink,
 }: CollabEditorProps) {
   const [sessionFiles, setSessionFiles] = useState(initialFiles);
   const [activeFileId, setActiveFileId] = useState<string | null>(
     initialFiles.length > 0 ? initialFiles[0].id : null,
   );
- 
+
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [connected, setConnected] = useState(false);
   const [currentLine, setCurrentLine] = useState(1);
@@ -237,7 +239,9 @@ export function CollabEditor({
   const isOwnerRef = useRef(isOwner);
   const sessionFilesRef = useRef(sessionFiles);
   // saveCode is defined below; saveCodeRef is populated after its definition.
-  const saveCodeRef = useRef<(value: string) => Promise<void>>(async () => undefined);
+  const saveCodeRef = useRef<(value: string) => Promise<void>>(
+    async () => undefined,
+  );
 
   activeFileIdRef.current = activeFileId;
   isOwnerRef.current = isOwner;
@@ -252,7 +256,9 @@ export function CollabEditor({
   const [isCallActive, setIsCallActive] = useState(false);
   const [isCallConnecting, setIsCallConnecting] = useState(false);
   const [callError, setCallError] = useState<string | null>(null);
-  const [remoteParticipant, setRemoteParticipant] = useState<string | null>(null);
+  const [remoteParticipant, setRemoteParticipant] = useState<string | null>(
+    null,
+  );
 
   const editorLanguage = useMemo(() => {
     if (language === "csharp") return "csharp";
@@ -267,9 +273,8 @@ export function CollabEditor({
     [presenceMembers, userName],
   );
 
-
-
-  const isLocalExecution = language === "javascript" || language === "typescript";
+  const isLocalExecution =
+    language === "javascript" || language === "typescript";
 
   const visibleRepoFiles = useMemo(() => {
     if (!repoFiles) return [] as { path: string; type: "file" | "dir" }[];
@@ -376,15 +381,22 @@ export function CollabEditor({
       }
     };
     void loadTree();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [githubRepoUrl, sessionId]);
 
   // ─── WebRTC helpers ─────────────────────────────────────────────────────
   const cleanupCall = useCallback(() => {
-    try { peerConnectionRef.current?.close(); } catch { /* ignore */ }
+    try {
+      peerConnectionRef.current?.close();
+    } catch {
+      /* ignore */
+    }
     peerConnectionRef.current = null;
     for (const track of localStreamRef.current?.getTracks() ?? []) track.stop();
-    for (const track of remoteStreamRef.current?.getTracks() ?? []) track.stop();
+    for (const track of remoteStreamRef.current?.getTracks() ?? [])
+      track.stop();
     localStreamRef.current = null;
     remoteStreamRef.current = null;
     if (localVideoRef.current) localVideoRef.current.srcObject = null;
@@ -441,8 +453,14 @@ export function CollabEditor({
 
   const startCall = useCallback(async () => {
     if (!socketRef.current || isCallActive || isCallConnecting) return;
-    if (!connected) { setCallError("You must be connected to start a call."); return; }
-    if (activeMembers.length === 0) { setCallError("Waiting for another collaborator to join."); return; }
+    if (!connected) {
+      setCallError("You must be connected to start a call.");
+      return;
+    }
+    if (activeMembers.length === 0) {
+      setCallError("Waiting for another collaborator to join.");
+      return;
+    }
     setCallError(null);
     setIsCallConnecting(true);
     try {
@@ -451,23 +469,40 @@ export function CollabEditor({
       await pc.setLocalDescription(offer);
       const target = activeMembers[0]?.userName ?? null;
       setRemoteParticipant(target);
-      socketRef.current.emit("webrtc-offer", { sessionId, from: userName, offer });
+      socketRef.current.emit("webrtc-offer", {
+        sessionId,
+        from: userName,
+        offer,
+      });
       setIsCallActive(true);
     } catch (err) {
       console.error("[webrtc] startCall error", err);
-      setCallError("Could not start call. Check camera/mic permissions and try again.");
+      setCallError(
+        "Could not start call. Check camera/mic permissions and try again.",
+      );
       cleanupCall();
     } finally {
       setIsCallConnecting(false);
     }
-  }, [activeMembers, cleanupCall, connected, ensurePeerConnection, isCallActive, isCallConnecting, sessionId, userName]);
+  }, [
+    activeMembers,
+    cleanupCall,
+    connected,
+    ensurePeerConnection,
+    isCallActive,
+    isCallConnecting,
+    sessionId,
+    userName,
+  ]);
 
   // ─── Remote cursor decorations ────────────────────────────────────────────
   const updateRemoteCursors = useCallback(() => {
     const editor = editorRef.current;
     const monaco = monacoRef.current;
     if (!editor || !monaco) return;
-    const remoteMembers = presenceMembers.filter((m) => m.userName !== userName);
+    const remoteMembers = presenceMembers.filter(
+      (m) => m.userName !== userName,
+    );
     const currentNames = new Set(remoteMembers.map((m) => m.userName));
     for (const [name, ids] of remoteCursorDecorationsRef.current) {
       if (!currentNames.has(name)) {
@@ -477,7 +512,8 @@ export function CollabEditor({
     }
     for (const member of remoteMembers) {
       const baseClass = ensureUserStyle(member.userName);
-      const existing = remoteCursorDecorationsRef.current.get(member.userName) ?? [];
+      const existing =
+        remoteCursorDecorationsRef.current.get(member.userName) ?? [];
       const newIds = editor.deltaDecorations(existing, [
         {
           range: new monaco.Range(member.lineNumber, 1, member.lineNumber, 1),
@@ -485,14 +521,18 @@ export function CollabEditor({
         },
         {
           range: new monaco.Range(member.lineNumber, 1, member.lineNumber, 1),
-          options: { beforeContentClassName: `${baseClass}-caret ${baseClass}-label` },
+          options: {
+            beforeContentClassName: `${baseClass}-caret ${baseClass}-label`,
+          },
         },
       ]);
       remoteCursorDecorationsRef.current.set(member.userName, newIds);
     }
   }, [presenceMembers, userName]);
 
-  useEffect(() => { updateRemoteCursors(); }, [presenceMembers, updateRemoteCursors]);
+  useEffect(() => {
+    updateRemoteCursors();
+  }, [presenceMembers, updateRemoteCursors]);
 
   // ─── Join notification ────────────────────────────────────────────────────
   useEffect(() => {
@@ -528,7 +568,9 @@ export function CollabEditor({
             },
           );
           if (!res.ok) {
-            const payload = (await res.json().catch(() => ({}))) as { error?: string };
+            const payload = (await res.json().catch(() => ({}))) as {
+              error?: string;
+            };
             throw new Error(payload.error ?? "Failed to save file");
           }
           setSessionFiles((cur) =>
@@ -543,7 +585,9 @@ export function CollabEditor({
             body: JSON.stringify({ code: value }),
           });
           if (!res.ok) {
-            const payload = (await res.json().catch(() => ({}))) as { error?: string };
+            const payload = (await res.json().catch(() => ({}))) as {
+              error?: string;
+            };
             throw new Error(payload.error ?? "Failed to save");
           }
         }
@@ -615,7 +659,11 @@ export function CollabEditor({
 
       socket.on("connect", () => {
         setConnected(true);
-        socket.emit("join-session", { sessionId, userName, userId: currentUserId });
+        socket.emit("join-session", {
+          sessionId,
+          userName,
+          userId: currentUserId,
+        });
         joinedSessionRef.current = true;
 
         // On (re)connect, send our current state vector so the server can reply
@@ -685,7 +733,13 @@ export function CollabEditor({
       // WebRTC signaling handlers
       socket.on(
         "webrtc-offer",
-        async ({ from, offer }: { from: string; offer: RTCSessionDescriptionInit }) => {
+        async ({
+          from,
+          offer,
+        }: {
+          from: string;
+          offer: RTCSessionDescriptionInit;
+        }) => {
           if (from === userName) return;
           setCallError(null);
           setIsCallConnecting(true);
@@ -696,7 +750,11 @@ export function CollabEditor({
             await pc.setLocalDescription(answer);
             setRemoteParticipant(from);
             setIsCallActive(true);
-            socketRef.current?.emit("webrtc-answer", { sessionId, from: userName, answer });
+            socketRef.current?.emit("webrtc-answer", {
+              sessionId,
+              from: userName,
+              answer,
+            });
           } catch (err) {
             console.error("[webrtc] error handling offer", err);
             setCallError("Could not join call.");
@@ -709,7 +767,13 @@ export function CollabEditor({
 
       socket.on(
         "webrtc-answer",
-        async ({ from, answer }: { from: string; answer: RTCSessionDescriptionInit }) => {
+        async ({
+          from,
+          answer,
+        }: {
+          from: string;
+          answer: RTCSessionDescriptionInit;
+        }) => {
           if (from === userName) return;
           const pc = peerConnectionRef.current;
           if (!pc) return;
@@ -723,7 +787,13 @@ export function CollabEditor({
 
       socket.on(
         "webrtc-ice-candidate",
-        async ({ from, candidate }: { from: string; candidate: RTCIceCandidateInit }) => {
+        async ({
+          from,
+          candidate,
+        }: {
+          from: string;
+          candidate: RTCIceCandidateInit;
+        }) => {
           if (from === userName) return;
           const pc = peerConnectionRef.current;
           if (!pc || !candidate) return;
@@ -735,7 +805,9 @@ export function CollabEditor({
         },
       );
 
-      socket.on("webrtc-end-call", () => { cleanupCall(); });
+      socket.on("webrtc-end-call", () => {
+        cleanupCall();
+      });
     };
 
     void initSocket();
@@ -772,17 +844,16 @@ export function CollabEditor({
 
         socketRef.current?.emit("ai-review-requested", { sessionId });
 
-        const enqueueRes = await fetch(
-          `/api/sessions/${sessionId}/ai-review`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ fullReview: true }),
-          },
-        );
+        const enqueueRes = await fetch(`/api/sessions/${sessionId}/ai-review`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fullReview: true }),
+        });
 
         if (!enqueueRes.ok) {
-          const payload = (await enqueueRes.json().catch(() => ({}))) as { error?: string };
+          const payload = (await enqueueRes.json().catch(() => ({}))) as {
+            error?: string;
+          };
           throw new Error(payload.error ?? "Failed to queue review");
         }
 
@@ -831,7 +902,10 @@ export function CollabEditor({
               if (event.token) setAiStreamText((prev) => prev + event.token);
               if (event.done && event.comments) {
                 setAiFeedback((cur) =>
-                  [...(Array.isArray(event.comments) ? event.comments : []), ...cur].slice(0, 20),
+                  [
+                    ...(Array.isArray(event.comments) ? event.comments : []),
+                    ...cur,
+                  ].slice(0, 20),
                 );
                 setAiStreamText("");
               }
@@ -852,23 +926,16 @@ export function CollabEditor({
   );
 
   // ─── File Management ──────────────────────────────────────────────────────
-  const handleSelectFile = useCallback(
-    (fileId: string, fileName: string) => {
-      const file = sessionFilesRef.current.find((f) => f.id === fileId);
-      if (file) {
-        setActiveFileId(fileId);
-        setActiveFileName(fileName);
-        codeRef.current = file.content;
-        setCurrentLine(1);
-        // Actual editor value update + binding teardown handled in the
-        // activeFileId useEffect above.
-      }
-    },
-    [],
-  );
+  const handleSelectFile = useCallback((fileId: string) => {
+    const file = sessionFilesRef.current.find((f) => f.id === fileId);
+    if (file) {
+      setActiveFileId(fileId);
 
-  const handleFileCreated = useCallback((newFile: typeof initialFiles[0]) => {
-    setSessionFiles((cur) => [...cur, newFile]);
+      codeRef.current = file.content;
+      setCurrentLine(1);
+      // Actual editor value update + binding teardown handled in the
+      // activeFileId useEffect above.
+    }
   }, []);
 
   const handleFileDeleted = useCallback(
@@ -893,7 +960,11 @@ export function CollabEditor({
       // Set up MonacoBinding for the main-session (yjs) mode. If a file is
       // already selected at mount time, skip — the file-mode useEffect will
       // manage the editor value directly.
-      if (activeFileIdRef.current === null && ytextRef.current && !bindingRef.current) {
+      if (
+        activeFileIdRef.current === null &&
+        ytextRef.current &&
+        !bindingRef.current
+      ) {
         const model = editor.getModel();
         if (model && ytextRef.current) {
           bindingRef.current = createYjsMonacoBinding(ytextRef.current, model);
@@ -911,14 +982,22 @@ export function CollabEditor({
       }
 
       cursorListenerRef.current?.dispose();
-      cursorListenerRef.current = editor.onDidChangeCursorPosition((e: { position: { lineNumber: number } }) => {
-        const nextLine = e.position.lineNumber;
-        setCurrentLine(nextLine);
-        if (nextLine !== lastEmittedLineRef.current && socketRef.current?.connected) {
-          lastEmittedLineRef.current = nextLine;
-          socketRef.current.emit("cursor-move", { sessionId, lineNumber: nextLine });
-        }
-      });
+      cursorListenerRef.current = editor.onDidChangeCursorPosition(
+        (e: { position: { lineNumber: number } }) => {
+          const nextLine = e.position.lineNumber;
+          setCurrentLine(nextLine);
+          if (
+            nextLine !== lastEmittedLineRef.current &&
+            socketRef.current?.connected
+          ) {
+            lastEmittedLineRef.current = nextLine;
+            socketRef.current.emit("cursor-move", {
+              sessionId,
+              lineNumber: nextLine,
+            });
+          }
+        },
+      );
 
       aiActionRef.current?.dispose();
       aiActionRef.current = editor.addAction({
@@ -980,7 +1059,9 @@ export function CollabEditor({
         };
 
         if (!res.ok || result.error) {
-          appendRunOutput(`✖ ${result.error ?? result.message ?? "Execution failed"}`);
+          appendRunOutput(
+            `✖ ${result.error ?? result.message ?? "Execution failed"}`,
+          );
           return;
         }
 
@@ -993,12 +1074,16 @@ export function CollabEditor({
 
         const run = result.run;
         if (run) {
-          if (run.stdout) run.stdout.split("\n").forEach((l) => appendRunOutput(l));
-          if (run.stderr) run.stderr.split("\n").forEach((l) => appendRunOutput(`✖ ${l}`));
+          if (run.stdout)
+            run.stdout.split("\n").forEach((l) => appendRunOutput(l));
+          if (run.stderr)
+            run.stderr.split("\n").forEach((l) => appendRunOutput(`✖ ${l}`));
           appendRunOutput(`Exited with code ${run.code}.`);
         }
       } catch (err) {
-        appendRunOutput(`✖ ${err instanceof Error ? err.message : "Network error"}`);
+        appendRunOutput(
+          `✖ ${err instanceof Error ? err.message : "Network error"}`,
+        );
       } finally {
         setIsRunning(false);
       }
@@ -1010,7 +1095,8 @@ export function CollabEditor({
     if (language === "typescript") {
       try {
         if (!tsModuleRef.current) {
-          const ts = (await import("typescript")) as typeof import("typescript");
+          const ts =
+            (await import("typescript")) as typeof import("typescript");
           tsModuleRef.current = ts;
         }
         const ts = tsModuleRef.current!;
@@ -1025,10 +1111,17 @@ export function CollabEditor({
         const diagnostics = result.diagnostics || [];
         if (diagnostics.length > 0) {
           diagnostics.forEach((d) => {
-            const message = ts.flattenDiagnosticMessageText(d.messageText, "\n");
+            const message = ts.flattenDiagnosticMessageText(
+              d.messageText,
+              "\n",
+            );
             if (d.file && typeof d.start === "number") {
-              const { line, character } = d.file.getLineAndCharacterOfPosition(d.start);
-              appendRunOutput(`TS${d.code} [${line + 1},${character + 1}]: ${message}`);
+              const { line, character } = d.file.getLineAndCharacterOfPosition(
+                d.start,
+              );
+              appendRunOutput(
+                `TS${d.code} [${line + 1},${character + 1}]: ${message}`,
+              );
             } else {
               appendRunOutput(`TS${d.code}: ${message}`);
             }
@@ -1115,7 +1208,10 @@ export function CollabEditor({
         const res = await fetch(
           `/api/sessions/${sessionId}/github/file?path=${encodeURIComponent(path)}`,
         );
-        const payload = (await res.json()) as { content?: string; error?: string };
+        const payload = (await res.json()) as {
+          content?: string;
+          error?: string;
+        };
         if (!res.ok || !payload.content) {
           throw new Error(payload.error || "Failed to load file from GitHub");
         }
@@ -1123,7 +1219,11 @@ export function CollabEditor({
         const nextCode = payload.content;
         codeRef.current = nextCode;
 
-        if (ytextRef.current && ydocRef.current && activeFileIdRef.current === null) {
+        if (
+          ytextRef.current &&
+          ydocRef.current &&
+          activeFileIdRef.current === null
+        ) {
           // yjs mode — replace via a transaction so the ydoc observer broadcasts.
           ydocRef.current.transact(() => {
             ytextRef.current!.delete(0, ytextRef.current!.length);
@@ -1144,7 +1244,9 @@ export function CollabEditor({
       } catch (err) {
         console.error("[github-import]", err);
         setRepoError(
-          err instanceof Error ? err.message : "Failed to import file from GitHub.",
+          err instanceof Error
+            ? err.message
+            : "Failed to import file from GitHub.",
         );
       }
     },
@@ -1287,7 +1389,12 @@ export function CollabEditor({
               height="60vh"
               language={editorLanguage}
               theme="vs-dark"
-              defaultValue={activeFileId === null ? initialCode : (sessionFiles.find(f => f.id === activeFileId)?.content ?? "")}
+              defaultValue={
+                activeFileId === null
+                  ? initialCode
+                  : (sessionFiles.find((f) => f.id === activeFileId)?.content ??
+                    "")
+              }
               onChange={onChange}
               onMount={handleEditorMount}
               options={{
@@ -1328,12 +1435,16 @@ export function CollabEditor({
               <div className="mt-3 h-40 overflow-y-auto rounded-lg border border-slate-800 bg-[#020617] px-3 py-2 font-mono text-xs text-slate-200">
                 {runOutput.length > 0 ? (
                   runOutput.map((line, index) => (
-                    <p key={index} className="whitespace-pre-wrap">{line}</p>
+                    <p key={index} className="whitespace-pre-wrap">
+                      {line}
+                    </p>
                   ))
                 ) : (
                   <p className="text-slate-500">
-                    Ready. Click <span className="font-semibold">Run Code</span> to execute.
-                    {!isLocalExecution && " Non-JS/TS languages run in a remote sandbox."}
+                    Ready. Click <span className="font-semibold">Run Code</span>{" "}
+                    to execute.
+                    {!isLocalExecution &&
+                      " Non-JS/TS languages run in a remote sandbox."}
                   </p>
                 )}
               </div>
@@ -1353,7 +1464,6 @@ export function CollabEditor({
                 }))}
                 activeFileId={activeFileId}
                 onSelectFile={handleSelectFile}
-                onFileCreated={handleFileCreated}
                 onFileDeleted={handleFileDeleted}
                 isOwner={isOwner}
               />
@@ -1379,7 +1489,8 @@ export function CollabEditor({
                       const depth = entry.path.split("/").length - 1;
                       const name = entry.path.split("/").pop() ?? entry.path;
                       const isDir = entry.type === "dir";
-                      const isExpanded = isDir && expandedDirs.includes(entry.path);
+                      const isExpanded =
+                        isDir && expandedDirs.includes(entry.path);
                       const handleClick = () => {
                         if (isDir) {
                           setExpandedDirs((prev) =>
@@ -1478,7 +1589,9 @@ export function CollabEditor({
                           <div className="mb-2 flex items-center justify-between gap-2">
                             <span className="text-xs text-slate-300">
                               Lines {fb.line_start}
-                              {fb.line_end !== fb.line_start ? `–${fb.line_end}` : ""}
+                              {fb.line_end !== fb.line_start
+                                ? `–${fb.line_end}`
+                                : ""}
                             </span>
                             <div className="flex gap-1">
                               <span
@@ -1603,7 +1716,9 @@ export function CollabEditor({
                     muted
                   />
                   <div className="pointer-events-none absolute inset-0 flex items-start justify-between p-1.5 text-[10px] text-slate-200">
-                    <span className="rounded bg-slate-900/70 px-1.5 py-0.5">You</span>
+                    <span className="rounded bg-slate-900/70 px-1.5 py-0.5">
+                      You
+                    </span>
                     {isCallActive && (
                       <span className="rounded bg-emerald-500/80 px-1.5 py-0.5 text-[10px] text-slate-950">
                         Live

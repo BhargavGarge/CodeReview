@@ -188,9 +188,7 @@ export function CollabEditor({
   const [activeFileId, setActiveFileId] = useState<string | null>(
     initialFiles.length > 0 ? initialFiles[0].id : null,
   );
-  const [activeFileName, setActiveFileName] = useState<string>(
-    initialFiles.length > 0 ? initialFiles[0].file_name : "main",
-  );
+ 
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [connected, setConnected] = useState(false);
   const [currentLine, setCurrentLine] = useState(1);

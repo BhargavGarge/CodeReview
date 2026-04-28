@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { FileText, FolderPlus, Trash2, Plus } from "lucide-react";
+import { FileText, Trash2 } from "lucide-react";
 
-interface FileItem {
+interface FileListItem {
   id: string;
   file_name: string;
   created_at: string;
@@ -12,10 +12,9 @@ interface FileItem {
 
 interface FileExplorerProps {
   sessionId: string;
-  files: FileItem[];
+  files: FileListItem[];
   activeFileId: string | null;
-  onSelectFile: (fileId: string, fileName: string) => void;
-  onFileCreated: (file: FileItem) => void;
+  onSelectFile: (fileId: string) => void;
   onFileDeleted: (fileId: string) => void;
   isOwner: boolean;
 }
@@ -25,42 +24,10 @@ export function FileExplorer({
   files,
   activeFileId,
   onSelectFile,
-  onFileCreated,
   onFileDeleted,
   isOwner,
 }: FileExplorerProps) {
-  const [isCreating, setIsCreating] = useState(false);
-  const [newFileName, setNewFileName] = useState("");
   const [loadingFileId, setLoadingFileId] = useState<string | null>(null);
-
-  const handleCreateFile = useCallback(async () => {
-    if (!newFileName.trim()) return;
-
-    setLoadingFileId("new");
-    try {
-      const res = await fetch(`/api/sessions/${sessionId}/files`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          file_name: newFileName.trim(),
-          content: "",
-        }),
-      });
-
-      if (!res.ok) throw new Error("Failed to create file");
-
-      const { file } = (await res.json()) as { file: FileItem };
-      onFileCreated(file);
-      setNewFileName("");
-      setIsCreating(false);
-      onSelectFile(file.id, file.file_name);
-    } catch (err) {
-      console.error("Error creating file:", err);
-      alert("Failed to create file");
-    } finally {
-      setLoadingFileId(null);
-    }
-  }, [newFileName, sessionId, onFileCreated, onSelectFile]);
 
   const handleDeleteFile = useCallback(
     async (fileId: string) => {
@@ -91,55 +58,11 @@ export function FileExplorer({
       <div className="border-b border-slate-800/80 p-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-slate-200">Files</h3>
-          {isOwner && (
-            <button
-              type="button"
-              onClick={() => setIsCreating(true)}
-              className="rounded p-1 text-slate-400 transition hover:bg-slate-800 hover:text-slate-200"
-              title="New file"
-            >
-              <Plus className="h-4 w-4" />
-            </button>
-          )}
         </div>
       </div>
 
       {/* File list */}
       <div className="flex-1 overflow-y-auto space-y-1 p-2">
-        {isCreating && (
-          <div className="rounded bg-slate-800/50 p-2">
-            <input
-              type="text"
-              value={newFileName}
-              onChange={(e) => setNewFileName(e.target.value)}
-              placeholder="file.js"
-              className="w-full rounded border border-slate-700 bg-slate-900 px-2 py-1 text-xs text-slate-100 placeholder-slate-500 outline-none focus:border-slate-500"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === "Enter") void handleCreateFile();
-                if (e.key === "Escape") setIsCreating(false);
-              }}
-            />
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                onClick={() => void handleCreateFile()}
-                disabled={loadingFileId === "new" || !newFileName.trim()}
-                className="flex-1 rounded bg-slate-700 px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-600 disabled:opacity-50"
-              >
-                Create
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsCreating(false)}
-                className="flex-1 rounded bg-slate-800 px-2 py-1 text-xs text-slate-200 transition hover:bg-slate-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
         {files.map((file) => (
           <div
             key={file.id}
@@ -151,7 +74,7 @@ export function FileExplorer({
           >
             <button
               type="button"
-              onClick={() => onSelectFile(file.id, file.file_name)}
+              onClick={() => onSelectFile(file.id)}
               className="flex flex-1 items-center gap-2 truncate"
             >
               <FileText className="h-3 w-3 flex-shrink-0" />
@@ -172,10 +95,9 @@ export function FileExplorer({
           </div>
         ))}
 
-        {files.length === 0 && !isCreating && (
+        {files.length === 0 && (
           <div className="p-2 text-center text-xs text-slate-500">
             No files yet.
-            {isOwner && " Click + to create one."}
           </div>
         )}
       </div>

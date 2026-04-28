@@ -267,12 +267,7 @@ export function CollabEditor({
     [presenceMembers, userName],
   );
 
-  const files = useMemo(() => {
-    if (language === "python") return ["main.py", "auth.py", "middleware.py"];
-    if (language === "go") return ["main.go", "auth.go", "middleware.go"];
-    if (language === "rust") return ["main.rs", "auth.rs", "middleware.rs"];
-    return ["index.ts", "auth.ts", "middleware.ts"];
-  }, [language]);
+
 
   const isLocalExecution = language === "javascript" || language === "typescript";
 

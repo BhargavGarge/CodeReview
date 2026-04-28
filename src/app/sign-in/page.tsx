@@ -1,3 +1,5 @@
+"use client";
+
 import { SignInPage, Testimonial } from "@/components/ui/sign-in";
 import type { Viewport } from "next";
 

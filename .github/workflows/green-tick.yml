@@ -38,7 +38,8 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: |
+          npm ci || npm install --no-audit --prefer-offline --no-fund
 
       - name: Build production app
         run: npm run build

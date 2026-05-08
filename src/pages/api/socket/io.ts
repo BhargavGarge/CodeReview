@@ -3,11 +3,11 @@ import type { Server as NetServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import type { Socket as NetSocket } from "net";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import IORedis from "ioredis";
 import { createAdapter } from "@socket.io/redis-adapter";
 import * as Y from "yjs";
 import type { Database, Json, SessionEventType } from "@/types/database";
 import { initReviewWorker } from "@/lib/review-worker";
+import { createRedisConnection } from "@/lib/redis";
 
 export const config = {
   api: { bodyParser: false },
@@ -54,25 +54,29 @@ async function logEvent(
 //
 // Cached on `global` so Next.js HMR module re-evaluation doesn't orphan the
 // old TCP connections (which causes the ECONNRESET cascade on the editor screen).
-const REDIS_URL = process.env.REDIS_URL ?? "redis://localhost:6379";
-
 const g = global as typeof globalThis & {
-  _redisPub?: IORedis;
-  _redisSub?: IORedis;
-  _redisData?: IORedis;
+  _redisPub?: ReturnType<typeof createRedisConnection>;
+  _redisSub?: ReturnType<typeof createRedisConnection>;
+  _redisData?: ReturnType<typeof createRedisConnection>;
 };
 
 if (!g._redisPub) {
-  g._redisPub = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
-  g._redisPub.on("error", (err: Error) => console.error("[redis:pub]", err.message));
+  g._redisPub = createRedisConnection();
+  g._redisPub.on("error", (err: Error) =>
+    console.error("[redis:pub]", err.message),
+  );
 }
 if (!g._redisSub) {
-  g._redisSub = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
-  g._redisSub.on("error", (err: Error) => console.error("[redis:sub]", err.message));
+  g._redisSub = createRedisConnection();
+  g._redisSub.on("error", (err: Error) =>
+    console.error("[redis:sub]", err.message),
+  );
 }
 if (!g._redisData) {
-  g._redisData = new IORedis(REDIS_URL, { maxRetriesPerRequest: null });
-  g._redisData.on("error", (err: Error) => console.error("[redis:data]", err.message));
+  g._redisData = createRedisConnection();
+  g._redisData.on("error", (err: Error) =>
+    console.error("[redis:data]", err.message),
+  );
 }
 
 const pubRedis = g._redisPub;
@@ -126,11 +130,17 @@ const lastCursorLog = new Map<string, number>();
 // io.to(sessionId).emit is relayed to all instances by the Redis adapter.
 async function emitPresenceAsync(io: SocketIOServer, sessionId: string) {
   const raw = await dataRedis.hgetall(presenceKey(sessionId));
-  const byUserName = new Map<string, { userName: string; lineNumber: number }>();
+  const byUserName = new Map<
+    string,
+    { userName: string; lineNumber: number }
+  >();
   for (const json of Object.values(raw ?? {})) {
     try {
       const m = JSON.parse(json) as SocketMeta;
-      byUserName.set(m.userName, { userName: m.userName, lineNumber: m.lineNumber });
+      byUserName.set(m.userName, {
+        userName: m.userName,
+        lineNumber: m.lineNumber,
+      });
     } catch {
       // skip malformed entries
     }
@@ -140,7 +150,11 @@ async function emitPresenceAsync(io: SocketIOServer, sessionId: string) {
   });
 }
 
-type JoinSessionPayload = { sessionId: string; userName: string; userId?: string };
+type JoinSessionPayload = {
+  sessionId: string;
+  userName: string;
+  userId?: string;
+};
 type CursorMovePayload = { sessionId: string; lineNumber: number };
 
 export default function handler(
@@ -241,12 +255,20 @@ export default function handler(
       // is missing. Used on connect/reconnect to re-converge.
       socket.on(
         "yjs-sync",
-        ({ sessionId, stateVector }: { sessionId: string; stateVector: number[] }) => {
+        ({
+          sessionId,
+          stateVector,
+        }: {
+          sessionId: string;
+          stateVector: number[];
+        }) => {
           void (async () => {
             try {
               const doc = await getOrLoadDoc(sessionId);
               const sv =
-                stateVector?.length > 0 ? new Uint8Array(stateVector) : undefined;
+                stateVector?.length > 0
+                  ? new Uint8Array(stateVector)
+                  : undefined;
               const diff = sv
                 ? Y.encodeStateAsUpdate(doc, sv)
                 : Y.encodeStateAsUpdate(doc);
@@ -371,7 +393,9 @@ export default function handler(
           from: string;
           candidate: unknown;
         }) => {
-          socket.to(sessionId).emit("webrtc-ice-candidate", { from, candidate });
+          socket
+            .to(sessionId)
+            .emit("webrtc-ice-candidate", { from, candidate });
         },
       );
 

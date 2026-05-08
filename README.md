@@ -263,29 +263,102 @@ npm run dev
 
 ## Deployment
 
-### Vercel (Recommended)
+### Render + Docker + GitHub Actions
 
-```bash
-npm install -g vercel
-vercel
-```
+This repository includes:
 
-### Other Platforms
+- CI workflow: `.github/workflows/ci.yml`
+- CD workflow: `.github/workflows/cd-render.yml`
+- Production Docker build via multi-stage `Dockerfile`
 
-Build and deploy the `out` directory:
+#### 1) Configure GitHub secrets
 
-```bash
-npm run build
-```
+Add these repository secrets in GitHub:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `RENDER_DEPLOY_HOOK`
+
+Optional (for local checks in CI if you add more build-time validations):
+
+- `REDIS_URL`
+- `GROQ_API_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+
+#### 2) Configure Render service
+
+- Runtime: Docker
+- Branch: `main`
+- Auto-deploy: optional; if you prefer GitHub Actions control, keep it off and use `RENDER_DEPLOY_HOOK`
+- Environment variables: set all values from `.env.example`
+
+#### 3) Redis setup
+
+Use Upstash or Render Redis and set:
+
+- `REDIS_URL=rediss://...` for hosted TLS Redis
+- `REDIS_URL=redis://localhost:6379` for local development
+
+The app uses Redis for:
+
+- BullMQ AI review queue
+- Socket.IO pub/sub adapter for multi-instance real-time sync
+- Session presence + collaborative state persistence
+
+#### 4) CI/CD behavior
+
+- Pull requests and pushes to `main`/`develop`: lint, type-check, build
+- Push to `main`: `CI` must pass first, then `CD Render` validates Dockerfile and triggers the Render deploy hook
+- Manual run: `CD Render` can also be triggered via `workflow_dispatch`
+
+#### 5) Branch protection (required)
+
+In GitHub repository settings, protect `main` and require status checks before merge.
+
+- Enable branch protection for `main`
+- Require pull request before merging
+- Require status checks to pass before merging
+- Select required check: `quality` (from the `CI` workflow)
+- Optional but recommended: require branches to be up to date before merging
+
+This ensures deploys can only happen from code that already passed CI.
+
+#### 6) Secret rotation (required if previously exposed)
+
+Rotate these credentials immediately in their providers and update values in both GitHub/Render secrets and local `.env.local`:
+
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `GROQ_API_KEY`
+- `REDIS_URL` (regenerate Upstash/Redis password)
+
+After rotation, update repository secrets:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `RENDER_DEPLOY_HOOK`
+- Optional: `REDIS_URL`, `GROQ_API_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 
 ## Environment Variables
 
-Create a `.env.local` file:
+Use `.env.example` as the source of truth:
 
 ```bash
-# Example - adjust as needed for your deployment
-NEXT_PUBLIC_API_URL=https://api.codereview.live
+cp .env.example .env.local
 ```
+
+Set values for:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_SITE_URL=
+GROQ_API_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+REDIS_URL=
+```
+
+Security note: never commit real credentials. If any secrets were exposed previously, rotate them immediately in Supabase, Groq, Redis, and Render.
 
 ## License
 

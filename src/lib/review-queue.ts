@@ -1,12 +1,9 @@
 import { Queue } from "bullmq";
-import IORedis from "ioredis";
+import { createRedisConnection } from "@/lib/redis";
 
 // Single Redis connection shared by queue producer + SSE polling.
 // Set REDIS_URL in .env.local (local: redis://localhost:6379 | Upstash: rediss://...)
-export const redisConnection = new IORedis(process.env.REDIS_URL!, {
-  maxRetriesPerRequest: null,
-  tls: {}, // 🔥 THIS is important for Upstash
-});
+export const redisConnection = createRedisConnection();
 redisConnection.on("error", (err: Error) =>
   console.error("[redis:queue]", err.message),
 );
